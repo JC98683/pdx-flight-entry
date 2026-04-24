@@ -1,15 +1,1 @@
-{
-  "name": "PDX Flight Entry",
-  "short_name": "PDX Flights",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#f5f7fb",
-  "theme_color": "#f5f7fb",
-  "icons": [
-    {
-      "src": "apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png"
-    }
-  ]
-}
+{"name":"PDX Flight Entry","short_name":"PDX Flights","start_url":"./index.html","display":"standalone","background_color":"#f5f7fb","theme_color":"#2563eb","orientation":"portrait","icons":[]}
