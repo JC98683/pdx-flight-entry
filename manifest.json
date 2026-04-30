@@ -1,1 +1,10 @@
-{"name":"PDX Flight Entry","short_name":"PDX Flights","start_url":"./index.html","display":"standalone","background_color":"#f5f7fb","theme_color":"#2563eb","orientation":"portrait","icons":[]}
+{
+  "name": "PDX Photo Flight Entry",
+  "short_name": "PDX Flight",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b3d91",
+  "orientation": "portrait",
+  "icons": []
+}
