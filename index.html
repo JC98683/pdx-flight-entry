@@ -96,6 +96,49 @@ function record(){totals();return {id:currentId||('id-'+Date.now()),savedAt:new 
 function fa(f){var id=(f.airline+f.flightNo).toUpperCase();return id?'https://www.flightaware.com/live/flight/'+encodeURIComponent(id):''}
 function pair(a,b){return '<span class="previewPair"><span class="lbl">'+esc(a)+'</span><span class="val">'+esc(b||'0')+'</span></span>'}
 function preview(){var r=record(),f=r.inbound,p=f.pax,h='<div class="previewKey">'+esc(f.airline)+' '+esc(f.flightNo)+' &nbsp; Date: '+esc(f.date)+' &nbsp; ETA: '+esc(f.eta)+'</div><div>TSA Status: <span class="badge '+(f.tsaStatus==='OPEN'?'open':f.tsaStatus==='CLOSED'?'closed':'')+'">'+esc(f.tsaStatus||'N/A')+'</span></div>';h+='<h3>Passengers</h3><div class="previewLine tight">'+pair('Total Pax',f.totalPax)+pair('WCHR',f.wchr)+pair('WCHC',f.wchc)+pair('Conn Pax',f.connPaxTotal)+'</div><div class="previewLine">'+pair('F',p.F)+pair('C/J',p.J)+pair('W',p.W)+pair('M',p.M)+pair('UM',p.UM)+pair('Inf',p.Inf)+pair('Child',p.Child)+'</div>';h+='<h3>Bags</h3><div class="previewLine tight">'+pair('Total Bags',f.totalBags)+pair('Conn Bags',f.connBagsTotal)+pair('Missing Bags',f.missingBags)+pair('Rush Bags',f.rushBags)+'</div>';h+='<h3>Animals</h3><div class="previewLine tight">'+pair('PETC',f.petc)+pair('AVIH',f.avih)+pair('SVIN',f.svin)+'</div>';if(f.notes)h+='<p><b>Inbound Notes:</b> '+esc(f.notes)+'</p>';function table(t,arr){if(!arr.length)return '';var x='<h3>'+t+'</h3><table class="connTable"><tr><th>Airline</th><th class="num">Flight</th><th>Dest</th><th>Gate</th><th class="num">ETD</th><th class="num">Pax</th><th class="num">Bags</th><th>Notes</th></tr>';for(var i=0;i<arr.length;i++){var c=arr[i];x+='<tr><td>'+esc(c.airline)+'</td><td class="num">'+esc(c.flightNo)+'</td><td>'+esc(String(c.dest||'').toUpperCase())+'</td><td>'+esc(c.gate)+'</td><td class="num">'+esc(c.etd)+'</td><td class="num">'+esc(c.pax)+'</td><td class="num">'+esc(c.bags)+'</td><td>'+esc(c.notes)+'</td></tr>'}return x+'</table>'}h+=table('Connecting Flights',f.connections)+table('Outbound',r.outbound.flights);if(r.outbound.notes)h+='<p><b>Outbound Notes:</b> '+esc(r.outbound.notes)+'</p>';var link=fa(f);if(link)h+='<a class="flightAware" href="'+esc(link)+'" target="_blank">FlightAware: '+esc(f.airline+f.flightNo)+'</a>';h+='<div class="acronyms"><b>Acronyms</b><div class="acronymGrid"><div>F = First Class</div><div>WCHR = Wheelchair</div><div>C/J = Business</div><div>WCHC = Cabin Wheelchair</div><div>W = Premium Economy</div><div>PETC = Pet in Cabin</div><div>M = Economy</div><div>AVIH = Animal in Hold</div><div>UM = Unaccompanied Minor</div><div>SVIN = Service Animal</div></div></div>';el('preview').innerHTML=h}
+function cell(v,w,right){v=String(v==null?'':v);if(v.length>w)v=v.slice(0,w);var sp=' '.repeat(Math.max(0,w-v.length));return right?sp+v:v+sp}
+function row(cols){return cols.map(function(c){return cell(c[0],c[1],c[2])}).join('  ').replace(/\s+$/,'')}
+function emailText(){
+ var r=record(),f=r.inbound,p=f.pax,lines=[];
+ lines.push((f.airline+' '+f.flightNo).trim()+'    Date: '+(f.date||'')+'    ETA: '+(f.eta||''));
+ lines.push('TSA Status: '+(f.tsaStatus||'N/A'));
+ lines.push('');
+ lines.push('PASSENGERS');
+ lines.push(row([['Total Pax',9],['WCHR',5,true],['WCHC',5,true],['Conn Pax',8,true]]));
+ lines.push(row([[f.totalPax,9,true],[f.wchr,5,true],[f.wchc,5,true],[f.connPaxTotal,8,true]]));
+ lines.push(row([['F',4,true],['C/J',5,true],['W',4,true],['M',4,true],['UM',4,true],['Inf',5,true],['Child',6,true]]));
+ lines.push(row([[p.F,4,true],[p.J,5,true],[p.W,4,true],[p.M,4,true],[p.UM,4,true],[p.Inf,5,true],[p.Child,6,true]]));
+ lines.push('');
+ lines.push('BAGS');
+ lines.push(row([['Total Bags',10],['Conn Bags',9,true],['Missing Bags',12,true],['Rush Bags',9,true]]));
+ lines.push(row([[f.totalBags,10,true],[f.connBagsTotal,9,true],[f.missingBags,12,true],[f.rushBags,9,true]]));
+ lines.push('');
+ lines.push('ANIMALS');
+ lines.push(row([['PETC',5,true],['AVIH',5,true],['SVIN',5,true]]));
+ lines.push(row([[f.petc,5,true],[f.avih,5,true],[f.svin,5,true]]));
+ if(f.notes){lines.push('');lines.push('Inbound Notes: '+f.notes)}
+ if(f.connections.length){
+   lines.push('');lines.push('CONNECTING FLIGHTS');
+   lines.push(row([['Air',4],['Flt',5,true],['Dest',4],['Gate',5],['ETD',5,true],['Pax',4,true],['Bags',5,true],['Notes',20]]));
+   for(var i=0;i<f.connections.length;i++){var c=f.connections[i];lines.push(row([[c.airline||'',4],[c.flightNo||'',5,true],[String(c.dest||'').toUpperCase(),4],[c.gate||'',5],[c.etd||'',5,true],[c.pax||'',4,true],[c.bags||'',5,true],[c.notes||'',20]]));}
+ }
+ if(r.outbound.flights.length){
+   lines.push('');lines.push('OUTBOUND');
+   lines.push(row([['Air',4],['Flt',5,true],['Dest',4],['Gate',5],['ETD',5,true],['Pax',4,true],['Bags',5,true],['Notes',20]]));
+   for(var j=0;j<r.outbound.flights.length;j++){var o=r.outbound.flights[j];lines.push(row([[o.airline||'',4],[o.flightNo||'',5,true],[String(o.dest||'').toUpperCase(),4],[o.gate||'',5],[o.etd||'',5,true],[o.pax||'',4,true],[o.bags||'',5,true],[o.notes||'',20]]));}
+ }
+ if(r.outbound.notes){lines.push('');lines.push('Outbound Notes: '+r.outbound.notes)}
+ var link=fa(f);if(link){lines.push('');lines.push('FlightAware: '+link)}
+ lines.push('');lines.push('ACRONYMS');
+ lines.push(row([['F = First Class',24],['WCHR = Wheelchair',24]]));
+ lines.push(row([['C/J = Business',24],['WCHC = Cabin Wheelchair',24]]));
+ lines.push(row([['W = Premium Economy',24],['PETC = Pet in Cabin',24]]));
+ lines.push(row([['M = Economy',24],['AVIH = Animal in Hold',24]]));
+ lines.push(row([['UM = Unaccompanied Minor',24],['SVIN = Service Animal',24]]));
+ return lines.join('\n');
+}
+function sendEmail(){var body=emailText(); if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(body).catch(function(){});} location.href='mailto:?subject='+encodeURIComponent('PDX Flight Data '+val('airline')+val('flightNo'))+'&body='+encodeURIComponent(body)}
+
 function text(){var r=record(),f=r.inbound,s=f.date+'\n'+(f.airline+' '+f.flightNo).trim()+'\n'+f.eta+'\n'+(f.tsaStatus||'N/A')+'\n\n';s+='Total Pax: '+pad(f.totalPax)+'\nTotal Bags: '+pad(f.totalBags)+'\nWCHR: '+pad(f.wchr)+'\nWCHC: '+pad(f.wchc)+'\nConn Pax: '+pad(f.connPaxTotal)+'\nConn Bags: '+pad(f.connBagsTotal)+'\nPETC: '+pad(f.petc)+'\nAVIH: '+pad(f.avih)+'\nSVIN: '+pad(f.svin)+'\n';if(f.connections.length){s+='\nCONNECTING FLIGHTS\n';for(var i=0;i<f.connections.length;i++){var c=f.connections[i];s+=(c.airline||'')+' '+pad(c.flightNo,4)+' '+String(c.dest||'').toUpperCase()+' Gate '+(c.gate||'')+' ETD '+(c.etd||'')+' Pax '+(c.pax||'')+' Bags '+(c.bags||'')+(c.notes?' '+c.notes:'')+'\n'}}var link=fa(f);if(link)s+='\nFlightAware: '+link;return s}
 function db(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}}
 function setdb(a){localStorage.setItem(KEY,JSON.stringify(a));saved()}
@@ -226,7 +269,7 @@ function addParsedConnections(rows){if(!rows.length){alert('No connecting flight
 function extractOCR(){addParsedConnections(parseConnectionLines(val('ocrText')))}
 function photoCapture(){var f=el('connPhoto');if(f)f.click()}
 function handlePhoto(file){if(!file)return;setStatus('Reading photo...');if(!(window.Tesseract&&Tesseract.recognize)){setStatus('OCR library not loaded. Paste iPhone Live Text into the box, then tap Extract.');return}Tesseract.recognize(file,'eng',{logger:function(m){if(m&&m.status)setStatus('OCR: '+m.status+(m.progress?' '+Math.round(m.progress*100)+'%':''));}}).then(function(r){var text=(r&&r.data&&r.data.text)||'';el('ocrText').value=text;setStatus('OCR complete. Adding extracted flights...');addParsedConnections(parseConnectionLines(text));}).catch(function(err){setStatus('OCR failed. Paste iPhone Live Text into the box, then tap Extract.');console.log(err)});}
-function act(a,id){if(a==='addConnection')addRow('connections',{});else if(a==='addOutbound')addRow('outbounds',{});else if(a==='removeRow'){var row=id;while(row&&row.className!=='row')row=row.parentNode;if(row)row.parentNode.removeChild(row)}else if(a==='save')save();else if(a==='new')newForm(true);else if(a==='print')window.print();else if(a==='email')location.href='mailto:?subject='+encodeURIComponent('PDX Flight Data '+val('airline')+val('flightNo'))+'&body='+encodeURIComponent(text());else if(a==='text')location.href='sms:?&body='+encodeURIComponent(text());else if(a==='json')download('pdx-flight-data.json','application/json',JSON.stringify(db(),null,2));else if(a==='csv')csv();else if(a==='photoCapture')photoCapture();else if(a==='extractOCR')extractOCR();else if(a==='paxPhotoCapture')paxPhotoCapture();else if(a==='extractPaxOCR')extractPaxOCR();else if(a==='wchPhotoCapture')wchPhotoCapture();else if(a==='extractWchOCR')extractWchOCR();else if(a==='outboundPhotoCapture')outboundPhotoCapture();else if(a==='extractOutboundOCR')extractOutboundOCR();else if(a==='open')load(id);else if(a==='delete')del(id);totals();preview();saved()}
+function act(a,id){if(a==='addConnection')addRow('connections',{});else if(a==='addOutbound')addRow('outbounds',{});else if(a==='removeRow'){var row=id;while(row&&row.className!=='row')row=row.parentNode;if(row)row.parentNode.removeChild(row)}else if(a==='save')save();else if(a==='new')newForm(true);else if(a==='print')window.print();else if(a==='email')sendEmail();else if(a==='text')location.href='sms:?&body='+encodeURIComponent(text());else if(a==='json')download('pdx-flight-data.json','application/json',JSON.stringify(db(),null,2));else if(a==='csv')csv();else if(a==='photoCapture')photoCapture();else if(a==='extractOCR')extractOCR();else if(a==='paxPhotoCapture')paxPhotoCapture();else if(a==='extractPaxOCR')extractPaxOCR();else if(a==='wchPhotoCapture')wchPhotoCapture();else if(a==='extractWchOCR')extractWchOCR();else if(a==='outboundPhotoCapture')outboundPhotoCapture();else if(a==='extractOutboundOCR')extractOutboundOCR();else if(a==='open')load(id);else if(a==='delete')del(id);totals();preview();saved()}
 document.addEventListener('click',function(e){var t=e.target,a=t&&t.getAttribute('data-action');if(a){e.preventDefault();act(a,t.getAttribute('data-id')||t)}});
 document.addEventListener('input',function(e){var t=e.target;if(t&&t.getAttribute('data-k')==='dest')t.value=t.value.toUpperCase();if(t&&/^(totalPax|connPaxTotal|connBagsTotal)$/.test(t.id))t.setAttribute('data-manual','1');totals();preview()});
 document.addEventListener('change',function(e){var t=e.target;if(t&&t.id==='connPhoto'&&t.files&&t.files[0])handlePhoto(t.files[0]);if(t&&t.id==='paxPhoto'&&t.files&&t.files[0])handlePaxPhoto(t.files[0]);if(t&&t.id==='wchPhoto'&&t.files&&t.files[0])handleWchPhoto(t.files[0]);if(t&&t.id==='outboundPhoto'&&t.files&&t.files[0])handleOutboundPhoto(t.files[0]);totals();preview()});
